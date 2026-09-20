@@ -1,20 +1,24 @@
 # 魔女文字練習帳
 
-アニメ『魔法少女まどか☆マギカ』シリーズに登場する「魔女文字」を、一覧・クイズ・変換で練習できる静的 Web アプリです。
+アニメ『魔法少女まどか ☆ マギカ』シリーズに登場する「魔女文字」を、一覧・クイズ・変換で練習できる静的 Web アプリです。
 HTML / CSS / JavaScript のみで動作します。
+
+## DEMO
+
+https://kubo-4ka.github.io/majo-moji/
 
 ## 免責事項
 
-本アプリは『魔法少女まどか☆マギカ』を題材にした**非公式のファンメイド作品**です。
+本アプリは『魔法少女まどか ☆ マギカ』を題材にした**非公式のファンメイド作品**です。
 原作者・制作会社・その他の権利者様とは一切関係ありません。権利者様への本アプリに関するお問い合わせはご遠慮ください。
 
 ## 機能
 
-画面下のメニューで6つの画面を切り替えます。
+画面下のメニューで 6 つの画面を切り替えます。
 
-- **クイズ**（5／10／20／30／50問／全部）
-  - 文字を読む・文字を探す：1文字ずつの対応
-  - 言葉を読む：名前・作中の文を4択で
+- **クイズ**（5／10／20／30／50 問／全部）
+  - 文字を読む・文字を探す：1 文字ずつの対応
+  - 言葉を読む：名前・作中の文を 4 択で
   - 書き取り：画面上のキーボード（A〜Z・Ä・Ö・Ü・ß）で入力。Ä は AE、ß は SS でも可
   - 瞬間読み：一瞬だけ表示される魔女文字を読む（表示時間は設定可）
   - 予測読み：前半だけ見えている文から全体を推測する
@@ -23,30 +27,30 @@ HTML / CSS / JavaScript のみで動作します。
   - 「正解したら自動で次へ」オプション、答えたあとは問題部分のタップでも次へ
   - 間違えた文字・言葉を多めに出題、結果画面から「間違えた問題だけ」再挑戦
   - 作中の文は、作中と同じ書体（Modern・Musical など）で出題（設定で切替）
-- **文字**：Archaic／Modern／Musical／Latin の4書体、数字・記号
+- **文字**：Archaic／Modern／Musical／Latin の 4 書体、数字・記号
 - **収録**：出題される言葉と文の全件。範囲ごとに折りたたみ、検索、「読みを隠す」、言語バッジ
 - **変換**：入力した文字列を魔女文字で表示
 - **図鑑**：魔女の紹介文を魔女文字だけで読む長文読解（ローマ字版／英語版、日本語訳の有無、書体を選択。行をタップで読みを表示）
 - **説明**：ネタバレの注意、使い方、書体、インストール方法、出典、免責事項
-- ホーム画面に追加してアプリとして使える（PWA）。オフラインで動くのは https:// で配信した場合のみ（Service Worker は安全なコンテキストでしか動かないため、LAN内の http:// ではキャッシュされません）
+- ホーム画面に追加してアプリとして使える（PWA）。オフラインで動くのは https:// で配信した場合のみ（Service Worker は安全なコンテキストでしか動かないため、LAN 内の http:// ではキャッシュされません）
 - ライト／ダークテーマ（初回は OS の設定に従う）
 
-見つかっていない文字（Modern の P・V・X、Musical の J・Q・W・X、Latin と Musical の Ä・Ö・Ü・ß）は、言葉の中では Archaic 体で代用して薄く表示します。1文字クイズでは、その書体にある文字だけを出題します。
+見つかっていない文字（Modern の P・V・X、Musical の J・Q・W・X、Latin と Musical の Ä・Ö・Ü・ß）は、言葉の中では Archaic 体で代用して薄く表示します。1 文字クイズでは、その書体にある文字だけを出題します。
 
 ## ファイル構成
 
-| ファイル | 内容 |
-| --- | --- |
-| `index.html` | 画面 |
-| `style.css` | デザイン（色は `:root` のトークンで管理） |
-| `app.js` | アプリ本体 |
-| `data.js` | 収録データ（魔女図鑑・作中の文・単語）。ここを編集すれば問題を追加できます |
-| `zukan.js` | 図鑑タブの紹介文（ローマ字・英語・日本語） |
-| `manifest.webmanifest` / `sw.js` / `icons/` | アプリとしてインストールするための設定・オフライン用キャッシュ・アイコン |
-| `runes.js` | 魔女文字のグリフ（生成ファイル） |
-| `tools/build-runes.js` | SVG から `runes.js` を生成するスクリプト（`node tools/build-runes.js runes.js <SVGフォルダ>`） |
-| `tools/serve.js` | ローカル確認用サーバ（`node tools/serve.js` → http://localhost:26828） |
-| `tools/make-cert.js` | ローカル HTTPS 確認用の自己署名証明書を作るスクリプト（要 openssl） |
+| ファイル                                    | 内容                                                                                           |
+| ------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `index.html`                                | 画面                                                                                           |
+| `style.css`                                 | デザイン（色は `:root` のトークンで管理）                                                      |
+| `app.js`                                    | アプリ本体                                                                                     |
+| `data.js`                                   | 収録データ（魔女図鑑・作中の文・単語）。ここを編集すれば問題を追加できます                     |
+| `zukan.js`                                  | 図鑑タブの紹介文（ローマ字・英語・日本語）                                                     |
+| `manifest.webmanifest` / `sw.js` / `icons/` | アプリとしてインストールするための設定・オフライン用キャッシュ・アイコン                       |
+| `runes.js`                                  | 魔女文字のグリフ（生成ファイル）                                                               |
+| `tools/build-runes.js`                      | SVG から `runes.js` を生成するスクリプト（`node tools/build-runes.js runes.js <SVGフォルダ>`） |
+| `tools/serve.js`                            | ローカル確認用サーバ（`node tools/serve.js` → http://localhost:26828）                         |
+| `tools/make-cert.js`                        | ローカル HTTPS 確認用の自己署名証明書を作るスクリプト（要 openssl）                            |
 
 ### data.js の書き方
 
@@ -69,12 +73,11 @@ Service Worker（オフライン・ホーム画面アプリ）は `https` か `l
 node tools/make-cert.js
 ```
 
-このPCの LAN 内 IPv4 アドレスと `localhost` を SAN に入れた証明書を `tools/certs/` に作ります（有効期間 397 日）。別のアドレスやホスト名を足したいときは引数で渡します（例：`node tools/make-cert.js 192.168.1.5 majo.local`）。
+この PC の LAN 内 IPv4 アドレスと `localhost` を SAN に入れた証明書を `tools/certs/` に作ります（有効期間 397 日）。別のアドレスやホスト名を足したいときは引数で渡します（例：`node tools/make-cert.js 192.168.1.5 majo.local`）。
 
 ```bash
 node tools/serve.js --https
 ```
-
 
 起動すると、アプリ本体が `https://<PCのIP>:26828/`、iPhone 用の証明書が `http://<PCのIP>:26829/cert.cer` で配られます。証明書だけ平文 HTTP なのは、まだ信頼していない HTTPS 経由でダウンロードすると iPhone で「プロファイルが無効です」になることがあるためです。
 
@@ -104,7 +107,7 @@ Get-NetTCPConnection -LocalPort 26828 -State Listen | ForEach-Object { Stop-Proc
 ## 出典・クレジット
 
 - 魔女文字のグリフ：[Puella Magi Wiki – Witch Runes](https://wiki.puella-magi.net/Witch_Runes) の SVG を、テーマの色に合わせて整形しています。
-- 魔女・手下の肩書き・性質・役割：[TVシリーズ公式サイト 魔女図鑑](https://www.madoka-magica.com/tv/special/dic/card1.html)
+- 魔女・手下の肩書き・性質・役割：[TV シリーズ公式サイト 魔女図鑑](https://www.madoka-magica.com/tv/special/dic/card1.html)
 - 図鑑タブの紹介文：公式の魔女図鑑の事実（肩書き・性質・登場話など）をもとに本アプリで書き起こしたもので、図鑑本文の転載ではありません
 - 作中の文の解読（ファンによるもの。日本語訳は本アプリでの意訳）
   - [Puella Magi Wiki – Category:Witch Runes](https://wiki.puella-magi.net/Category:Witch_Runes)（各話の解読表）
