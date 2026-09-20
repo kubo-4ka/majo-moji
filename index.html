@@ -86,6 +86,27 @@
               <label class="check"><input type="checkbox" id="optWeak" checked> 間違えた文字・言葉を多めに出す</label>
               <label class="check"><input type="checkbox" id="optAuto"> 正解したら自動で次の問題へ</label>
 
+              <div class="field" id="speechBox">
+                <span class="field-label">ドイツ語の読み上げ</span>
+                <div class="field-row">
+                  <label class="field">
+                    <span class="field-label">声</span>
+                    <select id="optVoice"></select>
+                  </label>
+                  <label class="field">
+                    <span class="field-label">速さ</span>
+                    <select id="optRate">
+                      <option value="0.7">ゆっくり</option>
+                      <option value="0.85">すこしゆっくり</option>
+                      <option value="1">ふつう</option>
+                      <option value="1.15">すこし速い</option>
+                    </select>
+                  </label>
+                </div>
+                <label class="check"><input type="checkbox" id="optSpeak"> 答え合わせのときに自動で読み上げる</label>
+                <p class="hint" id="speechHint"></p>
+              </div>
+
               <div class="field">
                 <span class="field-label">言葉の出題範囲</span>
                 <div class="chips" id="catChips"></div>
@@ -247,6 +268,9 @@
         </dl>
         <p>「収録」タブでは、出題される言葉と文の全件を見られます。「読みを隠す」をオンにすると、タップで答えを確認しながら読んでいけます。</p>
         <p>「図鑑」タブでは、魔女の紹介文を魔女文字だけで読む長文読解ができます。</p>
+
+        <h3>ドイツ語の読み上げ</h3>
+        <p>ドイツ語の言葉・文と、魔女や手下のドイツ語の名前には「♪」が付きます。タップすると、お使いのブラウザの音声で読み上げます。クイズの答え合わせ、収録一覧、結果の復習で使えます。声と速さは、クイズの「出題の設定」で変えられます。声は、端末にドイツ語の音声があれば女性のものを優先して選びます。</p>
 
         <h3>アプリとして使う</h3>
         <p>ホーム画面に追加すると、アプリのように全画面で使えます。<strong>https:// で公開されたページから追加した場合は</strong>、一度開いたあとオフラインでも動きます（LAN内の http:// のアドレスから追加したときは、オフラインでは開けません）。</p>

@@ -25,7 +25,7 @@
     { id: 'lang', title: '言語を見分ける', desc: '一瞬映る魔女文字が、何語で書かれているかを当てる', sample: 'SIE' }
   ];
   const LANGS = { de: 'ドイツ語', en: '英語', ja: '日本語（ローマ字）', other: 'その他（伊・仏・羅など）' };
-  const LANG_BADGE = { de: 'ドイツ語', en: '英語', ja: 'ローマ字', other: 'その他の言語', mix: '複数の言語', name: '名前' };
+  const LANG_BADGE = { de: 'ドイツ語', en: '英語', ja: 'ローマ字', other: 'その他の言語', mix: '複数の言語', name: '名前', 'de-name': 'ドイツ語の名前' };
   const TIMED_MODES = ['flash', 'lang'];
   const LETTER_MODES = ['r2l', 'l2r'];
 
@@ -42,6 +42,7 @@
   const settings = Object.assign(
     {
       script: 'archaic', count: '10', flash: 'auto', original: true, umlaut: false, weak: true, auto: false,
+      voice: '', rate: '0.85', speak: false,
       cats: CORPUS.filter((c) => c.defaultOn).map((c) => c.id)
     },
     store.get('settings', {})
@@ -190,6 +191,91 @@
     return (settings.umlaut ? BASE.concat(EXTRA) : BASE).filter((ch) => set[ch]);
   }
 
+  // ---------- speech (German read-aloud) ----------
+  const synth = window.speechSynthesis;
+  let deVoices = [];
+  // 女性の声を優先するための手がかり（端末ごとに名前が違うので、よくあるものを並べている）
+  const FEMALE_HINTS = ['anna', 'petra', 'katja', 'hedda', 'marlene', 'vicki', 'helena', 'amelie', 'eva', 'female', 'frau', 'weiblich'];
+
+  // ドイツ語の文・単語と、ドイツ語圏の名前（魔女や手下）を読み上げる
+  const speakable = (e) => !!synth && ['de', 'mix', 'de-name'].includes(e.lang);
+
+  function pickVoice() {
+    if (!deVoices.length) return null;
+    const saved = deVoices.find((v) => v.voiceURI === settings.voice || v.name === settings.voice);
+    if (saved) return saved;
+    const female = deVoices.find((v) => FEMALE_HINTS.some((h) => v.name.toLowerCase().includes(h)));
+    return female || deVoices[0];
+  }
+
+  /** 全部大文字だと略語として一文字ずつ読まれる端末があるので、文の形に直す */
+  const cap = (w) => w.charAt(0).toLocaleUpperCase('de-DE') + w.slice(1);
+  const speechText = (t, isName) => {
+    const s = t.toLocaleLowerCase('de-DE');
+    // 名前は単語ごとに大文字（ただし von などの前置詞はドイツ語の慣習どおり小文字のまま）
+    const PARTICLES = ['von', 'van', 'der', 'die', 'das', 'de'];
+    return isName
+      ? s.split(' ').map((w, i) => (i > 0 && PARTICLES.includes(w) ? w : cap(w))).join(' ')
+      : cap(s);
+  };
+
+  function speak(text, isName) {
+    if (!synth) return;
+    try {
+      synth.cancel();
+      const u = new SpeechSynthesisUtterance(speechText(text, isName));
+      const v = pickVoice();
+      if (v) u.voice = v;
+      u.lang = (v && v.lang) || 'de-DE';
+      u.rate = parseFloat(settings.rate) || 1;
+      synth.speak(u);
+    } catch (e) { /* 読み上げに対応していない端末 */ }
+  }
+
+  /** 「♪」の読み上げボタン */
+  function speakBtn(text, isName) {
+    const b = el('button', 'speak-btn', '♪');
+    b.type = 'button';
+    b.title = '読み上げる';
+    b.setAttribute('aria-label', 'ドイツ語を読み上げる');
+    b.addEventListener('click', (e) => {
+      e.stopPropagation();
+      b.classList.add('playing');
+      setTimeout(() => b.classList.remove('playing'), 900);
+      speak(text, isName);
+    });
+    return b;
+  }
+
+  function renderVoices() {
+    const box = $('#speechBox'), sel = $('#optVoice'), hint = $('#speechHint');
+    if (!synth) {
+      box.hidden = true;
+      return;
+    }
+    deVoices = synth.getVoices().filter((v) => /^de/i.test(v.lang));
+    sel.innerHTML = '';
+    const auto = el('option', null, 'おまかせ（女性の声を優先）');
+    auto.value = '';
+    sel.appendChild(auto);
+    for (const v of deVoices) {
+      const o = el('option', null, escapeHtml(`${v.name}（${v.lang}）`));
+      o.value = v.voiceURI;
+      sel.appendChild(o);
+    }
+    sel.value = deVoices.some((v) => v.voiceURI === settings.voice) ? settings.voice : '';
+    sel.disabled = !deVoices.length;
+    hint.textContent = deVoices.length
+      ? 'ドイツ語の言葉・文・名前には「♪」が付きます。タップすると読み上げます。'
+      : 'この端末にはドイツ語の音声が見つかりませんでした。「♪」は表示しますが、標準の声で読み上げます。';
+  }
+
+  if (synth) {
+    synth.addEventListener?.('voiceschanged', renderVoices);
+    // 一部の端末では声の一覧が遅れて届く
+    setTimeout(renderVoices, 500);
+  }
+
   // ---------- theme ----------
   function currentTheme() {
     const t = document.documentElement.dataset.theme;
@@ -276,6 +362,11 @@
     bind('#optUmlaut', 'umlaut');
     bind('#optWeak', 'weak');
     bind('#optAuto', 'auto');
+    bind('#optRate', 'rate', 'value');
+    bind('#optSpeak', 'speak');
+    bind('#optVoice', 'voice', 'value');
+    $('#optVoice').addEventListener('change', () => speak('Hexe'));  // 選んだ声をその場で確認できる  // 選んだ声をその場で確認できる
+    renderVoices();
 
     const chips = $('#catChips');
     chips.innerHTML = '';
@@ -571,6 +662,11 @@
     if (!LETTER_MODES.includes(quiz.mode) && q.item.note) detail += `<br><small>${escapeHtml(q.item.note)}</small>`;
     if (quiz.mode === 'spell' && !ok) detail = `　あなたの答え：${escapeHtml(upper(value))}<br>正解：${escapeHtml(q.answer)} ── ${escapeHtml(q.item.ja)}`;
     $('#gloss').innerHTML = mark + detail;
+    if (!LETTER_MODES.includes(quiz.mode) && speakable(q.item)) {
+      const isName = q.item.lang === 'de-name';
+      $('#gloss').appendChild(speakBtn(q.item.w, isName));
+      if (settings.speak) speak(q.item.w, isName);
+    }
     $('#scoreLabel').textContent = `${quiz.score} 正解`;
     $('#progressBar').style.width = ((quiz.i + 1) / quiz.questions.length) * 100 + '%';
 
@@ -623,7 +719,9 @@
       if (isLetter) body = `正解：<b>${escapeHtml(m.q.answer)}</b>`;
       else if (quiz.mode === 'lang') body = `正解：<b>${LANGS[m.q.answer]}</b><br>${escapeHtml(m.q.item.w)}　${escapeHtml(m.q.item.ja)}`;
       else body = `正解：<b>${escapeHtml(m.q.answer)}</b><br>${escapeHtml(m.q.item.ja)}`;
-      row.appendChild(el('span', 'ans', given + body));
+      const ans = el('span', 'ans', given + body);
+      if (!isLetter && speakable(m.q.item)) ans.appendChild(speakBtn(m.q.item.w, m.q.item.lang === 'de-name'));
+      row.appendChild(ans);
       review.appendChild(row);
     }
   }
@@ -761,12 +859,14 @@
         const script = entryScript(e);
         item.appendChild(runeWord(runeText(e), script));
         const meta = el('div', 'meta');
-        meta.appendChild(el('span', 'lat', escapeHtml(e.w)));
+        const lat = el('span', 'lat', escapeHtml(e.w));
+        if (speakable(e)) lat.appendChild(speakBtn(e.w, e.lang === 'de-name'));
+        meta.appendChild(lat);
         meta.appendChild(el('span', 'ja', escapeHtml(e.ja)));
         const sub = [];
         if (e.where) sub.push(escapeHtml(e.where));
         if (script !== 'archaic' || e.script) sub.push(`<span class="badge">${SCRIPTS[script].label}</span>`);
-        if (e.lang && e.lang !== 'name') sub.push(`<span class="badge lang">${LANG_BADGE[e.lang]}</span>`);
+        if (e.lang && e.lang !== 'name' && e.lang !== 'de-name') sub.push(`<span class="badge lang">${LANG_BADGE[e.lang]}</span>`);
         if (e.shown) sub.push(`作中表記：${escapeHtml(e.shown)}`);
         if (e.note) sub.push(escapeHtml(e.note));
         const s = wstats[e.key];

@@ -524,3 +524,24 @@ body.playing .gloss { max-height: 5.2em; overflow: auto; }
   .lib-item .lat { font-size: 21px; }
   .lib-item .sub, .badge { font-size: 14px; }
 }
+
+/* ---------- 読み上げボタン（♪） ---------- */
+.speak-btn {
+  display: inline-grid; place-items: center; vertical-align: -.15em; margin-left: .45em;
+  width: 1.75em; height: 1.75em; padding: 0 0 .12em; border-radius: 50%;
+  border: 1px solid var(--line); background: var(--surface); color: var(--accent);
+  font: 500 1.05em/1 var(--latin); cursor: pointer;
+  transition: background .2s, border-color .2s, transform .12s;
+}
+.speak-btn:hover { border-color: var(--accent); background: var(--accent-soft); }
+.speak-btn:active { transform: scale(.94); }
+.speak-btn.playing { border-color: var(--accent); background: var(--accent-soft); animation: chime .9s ease; }
+@keyframes chime {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 45%, transparent); }
+  100% { box-shadow: 0 0 0 10px transparent; }
+}
+.gloss .speak-btn { font-size: 15px; }
+.lib-item .lat .speak-btn { font-size: 15px; }
+#speechBox { border-top: 1px dashed var(--line); padding-top: 14px; }
+#speechBox .field-row { margin-bottom: 10px; }
+#speechBox select { min-width: 180px; max-width: 100%; }
