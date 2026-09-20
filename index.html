@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>魔女文字練習帳</title>
+  <meta name="description" content="アニメに登場する「魔女文字」を、一覧・クイズ・変換で練習できる非公式ファンメイドの練習帳。">
+  <meta name="theme-color" content="#faf8fd" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#15111b" media="(prefers-color-scheme: dark)">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+  <link rel="apple-touch-icon" sizes="167x167" href="icons/apple-touch-icon-167.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="icons/apple-touch-icon-152.png">
+  <link rel="apple-touch-icon" sizes="120x120" href="icons/apple-touch-icon-120.png">
+  <link rel="apple-touch-icon-precomposed" href="icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="魔女文字練習帳">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Shippori+Mincho:wght@500;600&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script>
+    // Apply the saved theme before paint to avoid a flash
+    try { var t = localStorage.getItem('mm.theme'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch (e) {}
+  </script>
+</head>
+<body>
+  <div class="page">
+    <header class="masthead">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true" id="brandMark"></span>
+        <div>
+          <h1>魔女文字練習帳</h1>
+          <p class="brand-sub">Hexenrunen &middot; Übungsheft</p>
+        </div>
+      </div>
+      <button class="icon-btn" id="themeBtn" type="button" aria-label="テーマを切り替え" title="テーマを切り替え">
+        <svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6"/></svg>
+        <svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
+      </button>
+    </header>
+
+    <main>
+      <!-- ===== Quiz ===== -->
+      <section class="view" id="view-quiz" aria-label="クイズ">
+        <div id="quizSetup" class="stack">
+          <div class="modes" id="modeList"></div>
+
+          <details class="settings" id="settingsBox">
+            <summary><span>出題の設定</span><span class="summary-line" id="settingsSummary"></span></summary>
+            <div class="settings-body">
+              <div class="field-row">
+                <label class="field">
+                  <span class="field-label">問題数</span>
+                  <select id="optCount">
+                    <option value="5">5問</option>
+                    <option value="10">10問</option>
+                    <option value="20">20問</option>
+                    <option value="30">30問</option>
+                    <option value="50">50問</option>
+                    <option value="all">全部</option>
+                  </select>
+                </label>
+                <label class="field">
+                  <span class="field-label">瞬間読みの表示時間</span>
+                  <select id="optFlash">
+                    <option value="auto">文字数に合わせる</option>
+                    <option value="500">0.5 秒</option>
+                    <option value="1000">1 秒</option>
+                    <option value="2000">2 秒</option>
+                    <option value="3000">3 秒</option>
+                  </select>
+                </label>
+              </div>
+
+              <div class="field">
+                <span class="field-label">書体</span>
+                <div class="seg" id="scriptSeg" role="radiogroup" aria-label="書体"></div>
+                <p class="hint" id="scriptHint"></p>
+              </div>
+              <label class="check"><input type="checkbox" id="optOriginal" checked> 作中の文は、作中と同じ書体で出題する</label>
+              <label class="check"><input type="checkbox" id="optUmlaut"> 1文字クイズに Ä・Ö・Ü・ß も含める</label>
+              <label class="check"><input type="checkbox" id="optWeak" checked> 間違えた文字・言葉を多めに出す</label>
+              <label class="check"><input type="checkbox" id="optAuto"> 正解したら自動で次の問題へ</label>
+
+              <div class="field">
+                <span class="field-label">言葉の出題範囲</span>
+                <div class="chips" id="catChips"></div>
+                <p class="hint" id="poolHint"></p>
+              </div>
+
+              <div class="note-box">
+                <b>足りない文字の扱い</b>
+                <ul>
+                  <li>Modern 体の P・V・X、Musical 体の J・Q・W・X、Latin 体と Musical 体の Ä・Ö・Ü・ß は見つかっていません。言葉の中では <b>Archaic 体で代用し、薄く</b>表示します。</li>
+                  <li>1文字クイズでは、選んだ書体にある文字だけを出題します。</li>
+                  <li>記号（? ! ' など）は魔女文字がないため、そのまま表示します。</li>
+                  <li>「言語を見分ける」は、名前以外の作中の文と単語から出題します。</li>
+                </ul>
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <div id="quizPlay" class="quiz" hidden>
+          <div class="quiz-top">
+            <button class="text-btn" id="quitBtn" type="button">&larr; やめる</button>
+            <span class="progress-label" id="progressLabel">1 / 10</span>
+            <span class="score-label" id="scoreLabel">0 正解</span>
+          </div>
+          <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+
+          <p class="prompt" id="prompt"></p>
+          <div class="stage" id="stage"></div>
+          <p class="where" id="where"></p>
+          <p class="gloss" id="gloss" aria-live="polite"></p>
+
+          <div class="choices" id="choices"></div>
+          <div class="typing" id="typing" hidden>
+            <div class="type-display" id="typeDisplay" aria-live="polite" aria-label="入力中の答え"></div>
+            <div class="kbd" id="kbd" role="group" aria-label="文字キー"></div>
+          </div>
+          <div class="next-row">
+            <button class="btn ghost" id="replayBtn" type="button" hidden>もう一度見る</button>
+            <button class="btn" id="nextBtn" type="button" hidden>次へ</button>
+          </div>
+        </div>
+
+        <div id="quizResult" class="result" hidden>
+          <p class="result-kicker">Ergebnis</p>
+          <p class="result-score"><span id="resultScore">0</span><small id="resultTotal"> / 10</small></p>
+          <p class="result-title" id="resultTitle"></p>
+          <div class="result-actions">
+            <button class="btn" id="againBtn" type="button">もう一度</button>
+            <button class="btn ghost" id="retryMissBtn" type="button" hidden>間違えた問題だけ</button>
+            <button class="btn ghost" id="backBtn" type="button">形式を選ぶ</button>
+          </div>
+          <div class="review" id="review"></div>
+        </div>
+      </section>
+
+      <!-- ===== Letters ===== -->
+      <section class="view" id="view-letters" aria-label="文字">
+        <div class="toolbar">
+          <div class="seg" id="scriptSeg2" role="radiogroup" aria-label="書体"></div>
+          <label class="check small"><input type="checkbox" id="hideLatin"> 答えを隠す</label>
+        </div>
+        <p class="hint">カードをタップすると大きく表示します。下の線はクイズの正答率です。薄いカードは、その書体では見つかっておらず Archaic 体で代用している文字です。</p>
+        <div class="grid" id="alphaGrid"></div>
+        <h2 class="sub-head">数字・記号</h2>
+        <div class="grid" id="digitGrid"></div>
+      </section>
+
+      <!-- ===== Library ===== -->
+      <section class="view" id="view-library" aria-label="収録一覧">
+        <div class="lib-tools">
+          <input type="search" id="libSearch" placeholder="検索（例：KÄSE、薔薇、第9話）" aria-label="収録一覧を検索">
+          <label class="check small"><input type="checkbox" id="libHide"> 読みを隠す</label>
+        </div>
+        <div class="lib-script">
+          <div class="seg" id="scriptSeg5" role="radiogroup" aria-label="書体"></div>
+          <label class="check small"><input type="checkbox" id="libOriginal"> 作中の文は作中の書体で表示</label>
+        </div>
+        <div class="chips lib-cats" id="libCats"></div>
+        <p class="hint" id="libCount"></p>
+        <div id="libList"></div>
+      </section>
+
+      <!-- ===== Convert ===== -->
+      <section class="view" id="view-convert" aria-label="変換">
+        <label class="field-label" for="convInput">文字を入力すると魔女文字で表示します</label>
+        <textarea id="convInput" rows="2" spellcheck="false" placeholder="例：Madoka / Wo ist der Käse?">Madoka</textarea>
+        <div class="toolbar">
+          <div class="seg" id="scriptSeg3" role="radiogroup" aria-label="書体"></div>
+          <label class="check small"><input type="checkbox" id="convLabels" checked> 読みを表示</label>
+        </div>
+        <div class="conv-out" id="convOut" aria-live="polite"></div>
+        <p class="hint">アルファベット（ドイツ語のウムラウトを含む）と数字に対応しています。日本語はローマ字で入力してください。</p>
+      </section>
+
+      <!-- ===== Zukan ===== -->
+      <section class="view" id="view-zukan" aria-label="図鑑">
+        <div id="zukanSetup">
+          <p class="lead">魔女の紹介文を、魔女文字だけで読む長文読解のページです。</p>
+          <div class="zk-form">
+            <label class="field">
+              <span class="field-label">魔女</span>
+              <select id="zkWitch"></select>
+            </label>
+            <label class="field">
+              <span class="field-label">文章</span>
+              <select id="zkLang">
+                <option value="ro">ローマ字版（日本語）</option>
+                <option value="en">英語版</option>
+              </select>
+            </label>
+            <label class="field">
+              <span class="field-label">日本語訳</span>
+              <select id="zkTrans">
+                <option value="line">行ごとに表示</option>
+                <option value="none">表示しない（魔女文字のみ）</option>
+              </select>
+            </label>
+            <div class="field">
+              <span class="field-label">書体</span>
+              <div class="seg" id="scriptSeg4" role="radiogroup" aria-label="書体"></div>
+            </div>
+          </div>
+          <button class="btn zk-open" id="zkOpen" type="button">図鑑を見る</button>
+          <p class="hint">紹介文は公式サイトの魔女図鑑をもとに本アプリで書き起こしたものです（本文の転載ではありません）。各行をタップすると、その行の読みを確認できます。</p>
+        </div>
+        <div id="zukanPage" hidden>
+          <div class="zk-bar">
+            <button class="text-btn" id="zkBack" type="button">&larr; 選びなおす</button>
+            <button class="text-btn" id="zkRevealAll" type="button">読みをすべて表示</button>
+          </div>
+          <article class="zk-card" id="zkCard"></article>
+        </div>
+      </section>
+
+      <!-- ===== About ===== -->
+      <section class="view prose" id="view-about" aria-label="このアプリについて">
+        <h2>このアプリについて</h2>
+        <p>『魔法少女まどか☆マギカ』シリーズに登場する「魔女文字」を読む練習帳です。1文字ずつの対応を覚えるところから始めて、作中に実際に出てきた言葉や文を繰り返し読むことで、長い文字列もぱっと読める力を身につけることを目指しています。</p>
+
+        <div class="notice spoil">
+          <b>ネタバレにご注意ください</b>
+          <p>収録している言葉や文、魔女の情報には、TVシリーズ・劇場版（『叛逆の物語』『ワルプルギスの廻天』を含む）の物語全体に関わるネタバレが含まれます。作品を一通り見終わってから、魔女文字に興味を持ったときに活用してください。</p>
+        </div>
+
+        <div class="notice">
+          <b>非公式のファンメイド作品です</b>
+          <p>本アプリは『魔法少女まどか☆マギカ』を題材にした非公式のファンメイド作品です。原作者・制作会社・その他の権利者様とは一切関係ありません。権利者様への本アプリに関するお問い合わせはご遠慮ください。</p>
+        </div>
+
+        <h3>練習のしかた</h3>
+        <dl class="defs">
+          <dt>文字を読む／文字を探す</dt><dd>1文字ずつの対応を覚えます。間違えた文字ほど多く出題されます。</dd>
+          <dt>言葉を読む</dt><dd>魔女の名前や作中の文を4択で読みます。</dd>
+          <dt>書き取り</dt><dd>魔女文字の言葉をアルファベットで入力します。Ä は AE、ß は SS と入力しても正解になります。</dd>
+          <dt>瞬間読み</dt><dd>魔女文字が一瞬だけ表示されます。スクリーンで流れる文字を読む練習に。</dd>
+          <dt>予測読み</dt><dd>文の前半だけが見えている状態から、全体を推測します。単語や言い回しのパターンを覚えるのに役立ちます。</dd>
+          <dt>言語を見分ける</dt><dd>一瞬だけ映る魔女文字が、ドイツ語・英語・日本語のローマ字などのどれなのかを見分けます。</dd>
+        </dl>
+        <p>「収録」タブでは、出題される言葉と文の全件を見られます。「読みを隠す」をオンにすると、タップで答えを確認しながら読んでいけます。</p>
+        <p>「図鑑」タブでは、魔女の紹介文を魔女文字だけで読む長文読解ができます。</p>
+
+        <h3>アプリとして使う</h3>
+        <p>ホーム画面に追加すると、アプリのように全画面で使えます。<strong>https:// で公開されたページから追加した場合は</strong>、一度開いたあとオフラインでも動きます（LAN内の http:// のアドレスから追加したときは、オフラインでは開けません）。</p>
+        <ul class="sources">
+          <li>iPhone（Safari）：共有ボタン →「ホーム画面に追加」</li>
+          <li>Android（Chrome）：メニュー →「アプリをインストール」または「ホーム画面に追加」</li>
+        </ul>
+        <button class="btn small" id="installBtn" type="button" hidden>アプリとしてインストール</button>
+
+        <h3>書体について</h3>
+        <p>魔女文字には、ファンの間で次の4つの書体（バリエーション）が知られています。</p>
+        <dl class="defs">
+          <dt>Archaic</dt><dd>もっとも多く使われている標準的な書体。</dd>
+          <dt>Modern</dt><dd>簡略化された書体。第1話の薔薇園の魔女の結界などに登場します。P・V・X は見つかっていません。</dd>
+          <dt>Musical</dt><dd>音符や休符でできた書体。人魚の魔女の結界などに登場します。J・Q・W・X は見つかっていません。</dd>
+          <dt>Latin</dt><dd>『マギアレコード』や『ワルプルギスの廻天』などで使われる書体。</dd>
+        </dl>
+        <p>見つかっていない文字は Archaic 体で代用し、薄く表示しています。</p>
+
+        <h3>収録データと出典</h3>
+        <p>文字の対応と作中の文の解読は、ファンコミュニティによるものです。公式の対応表・翻訳ではありません。日本語訳は本アプリで付けた意訳です。</p>
+        <ul class="sources" id="sourceList"></ul>
+
+        <h3>クレジット</h3>
+        <ul class="sources">
+          <li>魔女文字のグリフ：<a href="https://wiki.puella-magi.net/Witch_Runes" target="_blank" rel="noopener">Puella Magi Wiki – Witch Runes</a> の SVG を、テーマの色に合わせて整形して使用しています。</li>
+          <li>フォント：Shippori Mincho／Zen Kaku Gothic New／Cormorant Garamond（Google Fonts）</li>
+        </ul>
+
+        <h3>データの保存</h3>
+        <p>正答率と設定は、お使いのブラウザの中だけに保存されます。外部へ送信されることはありません。</p>
+        <button class="btn ghost small" id="resetStats" type="button">正答率の記録を消す</button>
+      </section>
+    </main>
+
+    <p class="foot-mini">非公式ファンメイド作品です。権利者様とは関係ありません。</p>
+  </div>
+
+  <nav class="bottom-nav" aria-label="メニュー">
+    <button class="nav-item" data-view="quiz" type="button">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M9.6 9.6a2.5 2.5 0 1 1 3.4 2.3c-.7.3-1 .8-1 1.5v.4M12 16.6v.2"/></svg>
+      <span>クイズ</span>
+    </button>
+    <button class="nav-item" data-view="letters" type="button">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg>
+      <span>文字</span>
+    </button>
+    <button class="nav-item" data-view="library" type="button">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4.5h10.5a3 3 0 0 1 3 3V19.5H8a3 3 0 0 1-3-3z"/><path d="M5 16.5a3 3 0 0 1 3-3h10.5M9 8h6"/></svg>
+      <span>収録</span>
+    </button>
+    <button class="nav-item" data-view="convert" type="button">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h13l-3.5-3.5M20 16H7l3.5 3.5"/></svg>
+      <span>変換</span>
+    </button>
+    <button class="nav-item" data-view="zukan" type="button">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6.5C10 5 7.5 4.6 4.5 5v13c3-.4 5.5 0 7.5 1.5 2-1.5 4.5-1.9 7.5-1.5V5c-3-.4-5.5 0-7.5 1.5zM12 6.5v13"/></svg>
+      <span>図鑑</span>
+    </button>
+    <button class="nav-item" data-view="about" type="button">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5.5M12 7.6v.2"/></svg>
+      <span>説明</span>
+    </button>
+  </nav>
+
+  <dialog id="glyphDialog" class="glyph-dialog">
+    <form method="dialog">
+      <div class="big-rune" id="dlgRune"></div>
+      <p class="dlg-letter" id="dlgLetter"></p>
+      <p class="dlg-stat" id="dlgStat"></p>
+      <button class="btn ghost" value="close">閉じる</button>
+    </form>
+  </dialog>
+
+  <script src="runes.js"></script>
+  <script src="data.js"></script>
+  <script src="zukan.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

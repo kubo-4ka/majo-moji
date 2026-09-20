@@ -1,0 +1,17 @@
+{
+  "name": "魔女文字練習帳",
+  "short_name": "魔女文字練習帳",
+  "description": "アニメに登場する「魔女文字」を練習する非公式ファンメイドの練習帳",
+  "lang": "ja",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#faf8fd",
+  "theme_color": "#8a5cc4",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
