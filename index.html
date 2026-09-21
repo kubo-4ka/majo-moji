@@ -102,6 +102,14 @@
                       <option value="1.15">すこし速い</option>
                     </select>
                   </label>
+                  <label class="field">
+                    <span class="field-label">音量</span>
+                    <select id="optVolume">
+                      <option value="0.3">小さめ</option>
+                      <option value="0.6">すこし小さめ</option>
+                      <option value="1">最大</option>
+                    </select>
+                  </label>
                 </div>
                 <label class="check"><input type="checkbox" id="optSpeak"> 答え合わせのときに自動で読み上げる</label>
                 <p class="hint" id="speechHint"></p>
@@ -192,8 +200,9 @@
 
       <!-- ===== Convert ===== -->
       <section class="view" id="view-convert" aria-label="変換">
-        <label class="field-label" for="convInput">文字を入力すると魔女文字で表示します</label>
-        <textarea id="convInput" rows="2" spellcheck="false" placeholder="例：Madoka / Wo ist der Käse?">Madoka</textarea>
+        <span class="field-label">文字を入力すると魔女文字で表示します</span>
+        <div class="type-display" id="convDisplay" aria-live="polite" aria-label="入力中の文字"></div>
+        <div class="kbd" id="convKbd" role="group" aria-label="文字キー"></div>
         <div class="toolbar">
           <div class="seg" id="scriptSeg3" role="radiogroup" aria-label="書体"></div>
           <label class="check small"><input type="checkbox" id="convLabels" checked> 読みを表示</label>
@@ -270,7 +279,7 @@
         <p>「図鑑」タブでは、魔女の紹介文を魔女文字だけで読む長文読解ができます。</p>
 
         <h3>ドイツ語の読み上げ</h3>
-        <p>ドイツ語の言葉・文と、魔女や手下のドイツ語の名前には「♪」が付きます。タップすると、お使いのブラウザの音声で読み上げます。クイズの答え合わせ、収録一覧、結果の復習で使えます。声と速さは、クイズの「出題の設定」で変えられます。声は、端末にドイツ語の音声があれば女性のものを優先して選びます。</p>
+        <p>ドイツ語の言葉・文と、魔女や手下のドイツ語の名前には「♪」が付きます。タップすると、お使いのブラウザの音声で読み上げます。クイズの答え合わせ、収録一覧、結果の復習で使えます。声・速さ・音量は、クイズの「出題の設定」で変えられます。声の一覧には、端末に入っているドイツ語の音声（ドイツ・オーストリア・スイスなど）が並びます。</p>
 
         <h3>アプリとして使う</h3>
         <p>ホーム画面に追加すると、アプリのように全画面で使えます。<strong>https:// で公開されたページから追加した場合は</strong>、一度開いたあとオフラインでも動きます（LAN内の http:// のアドレスから追加したときは、オフラインでは開けません）。</p>

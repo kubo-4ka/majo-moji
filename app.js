@@ -42,7 +42,7 @@
   const settings = Object.assign(
     {
       script: 'archaic', count: '10', flash: 'auto', original: true, umlaut: false, weak: true, auto: false,
-      voice: '', rate: '0.85', speak: false,
+      voice: '', rate: '0.85', volume: '1', speak: false,
       cats: CORPUS.filter((c) => c.defaultOn).map((c) => c.id)
     },
     store.get('settings', {})
@@ -201,9 +201,10 @@
   const speakable = (e) => !!synth && ['de', 'mix', 'de-name'].includes(e.lang);
 
   function pickVoice() {
-    if (!deVoices.length) return null;
-    const saved = deVoices.find((v) => v.voiceURI === settings.voice || v.name === settings.voice);
+    const all = synth ? synth.getVoices() : [];
+    const saved = all.find((v) => v.voiceURI === settings.voice || v.name === settings.voice);
     if (saved) return saved;
+    if (!deVoices.length) return null;
     const female = deVoices.find((v) => FEMALE_HINTS.some((h) => v.name.toLowerCase().includes(h)));
     return female || deVoices[0];
   }
@@ -225,9 +226,12 @@
       synth.cancel();
       const u = new SpeechSynthesisUtterance(speechText(text, isName));
       const v = pickVoice();
-      if (v) u.voice = v;
+      // 声の指定に失敗しても、読み上げ自体は標準の声で続ける
+      try { if (v) u.voice = v; } catch (err) { /* 使えない声 */ }
       u.lang = (v && v.lang) || 'de-DE';
       u.rate = parseFloat(settings.rate) || 1;
+      u.volume = parseFloat(settings.volume);
+      if (!(u.volume >= 0 && u.volume <= 1)) u.volume = 1;
       synth.speak(u);
     } catch (e) { /* 読み上げに対応していない端末 */ }
   }
@@ -247,27 +251,40 @@
     return b;
   }
 
+  // ドイツ語が話されている地域。端末に入っていればそのまま一覧に出る
+  const DE_REGIONS = {
+    'de-de': 'ドイツ', 'de-at': 'オーストリア', 'de-ch': 'スイス',
+    'de-li': 'リヒテンシュタイン', 'de-lu': 'ルクセンブルク', 'de-be': 'ベルギー'
+  };
+  const regionOf = (lang) => DE_REGIONS[String(lang).toLowerCase().replace('_', '-')] || lang;
+
   function renderVoices() {
     const box = $('#speechBox'), sel = $('#optVoice'), hint = $('#speechHint');
     if (!synth) {
       box.hidden = true;
       return;
     }
-    deVoices = synth.getVoices().filter((v) => /^de/i.test(v.lang));
+    const all = synth.getVoices();
+    deVoices = all.filter((v) => /^de([-_]|$)/i.test(v.lang))
+      .sort((a, b) => (a.lang.toLowerCase().startsWith('de-de') ? 0 : 1) - (b.lang.toLowerCase().startsWith('de-de') ? 0 : 1)
+        || a.lang.localeCompare(b.lang) || a.name.localeCompare(b.name));  // ドイツを先頭に
+    const list = deVoices.length ? deVoices : all;   // ドイツ語がなければ端末の全部から選べるようにする
     sel.innerHTML = '';
-    const auto = el('option', null, 'おまかせ（女性の声を優先）');
+    const auto = el('option', null, 'おまかせ');
     auto.value = '';
     sel.appendChild(auto);
-    for (const v of deVoices) {
-      const o = el('option', null, escapeHtml(`${v.name}（${v.lang}）`));
+    for (const v of list) {
+      const label = deVoices.length ? `${v.name}（${regionOf(v.lang)}）` : `${v.name}（${v.lang}）`;
+      const o = el('option', null, escapeHtml(label));
       o.value = v.voiceURI;
       sel.appendChild(o);
     }
-    sel.value = deVoices.some((v) => v.voiceURI === settings.voice) ? settings.voice : '';
-    sel.disabled = !deVoices.length;
+    sel.value = list.some((v) => v.voiceURI === settings.voice) ? settings.voice : '';
+    sel.disabled = !list.length;
+    const regions = [...new Set(deVoices.map((v) => regionOf(v.lang)))];
     hint.textContent = deVoices.length
-      ? 'ドイツ語の言葉・文・名前には「♪」が付きます。タップすると読み上げます。'
-      : 'この端末にはドイツ語の音声が見つかりませんでした。「♪」は表示しますが、標準の声で読み上げます。';
+      ? `ドイツ語の言葉・文・名前には「♪」が付きます。この端末のドイツ語の音声：${deVoices.length} 種類（${regions.join('・')}）。`
+      : 'この端末にはドイツ語の音声が見つかりませんでした。一覧には端末にある声を並べています。';
   }
 
   if (synth) {
@@ -363,6 +380,7 @@
     bind('#optWeak', 'weak');
     bind('#optAuto', 'auto');
     bind('#optRate', 'rate', 'value');
+    bind('#optVolume', 'volume', 'value');
     bind('#optSpeak', 'speak');
     bind('#optVoice', 'voice', 'value');
     $('#optVoice').addEventListener('change', () => speak('Hexe'));  // 選んだ声をその場で確認できる  // 選んだ声をその場で確認できる
@@ -499,10 +517,14 @@
 
   // on-screen keyboard for the dictation mode (no OS keyboard)
   const KEY_ROWS = ['QWERTYUIOP', 'ASDFGHJKL', 'ZXCVBNM', 'ÄÖÜß'];
-  function buildKeyboard() {
-    const kbd = $('#kbd');
+  const BACKSPACE_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h11v12H9l-6-6z"/><path d="M12.5 9.5l5 5M17.5 9.5l-5 5"/></svg>';
+
+  /** 画面上のキーボードを作る。opts.digits で数字の段、opts.action で右下のキーを決める */
+  function buildKeyboard(kbd, opts) {
     kbd.innerHTML = '';
-    KEY_ROWS.forEach((row, r) => {
+    const rows = opts.digits ? ['1234567890'].concat(KEY_ROWS) : KEY_ROWS.slice();
+    const lastIdx = rows.length - 1;
+    rows.forEach((row, r) => {
       const line = el('div', 'kbd-row');
       for (const ch of row) {
         const k = el('button', 'key', escapeHtml(ch));
@@ -510,23 +532,23 @@
         k.dataset.key = ch;
         line.appendChild(k);
       }
-      if (r === 2) {
-        const bs = el('button', 'key key-wide', '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h11v12H9l-6-6z"/><path d="M12.5 9.5l5 5M17.5 9.5l-5 5"/></svg>');
+      if (r === lastIdx - 1) {
+        const bs = el('button', 'key key-wide', BACKSPACE_ICON);
         bs.type = 'button'; bs.dataset.key = 'Backspace'; bs.setAttribute('aria-label', '1文字消す');
         line.appendChild(bs);
       }
-      if (r === 3) {
+      if (r === lastIdx) {
         const sp = el('button', 'key key-space', 'space');
         sp.type = 'button'; sp.dataset.key = ' '; sp.setAttribute('aria-label', 'スペース');
-        const ok = el('button', 'key key-enter', '答える');
-        ok.type = 'button'; ok.dataset.key = 'Enter';
+        const ok = el('button', 'key key-enter', opts.action.label);
+        ok.type = 'button'; ok.dataset.key = opts.action.key;
         line.append(sp, ok);
       }
       kbd.appendChild(line);
     });
     kbd.addEventListener('click', (e) => {
       const k = e.target.closest('.key');
-      if (k) typeKey(k.dataset.key);
+      if (k) opts.onKey(k.dataset.key);
     });
   }
 
@@ -736,7 +758,7 @@
     $('#quizSetup').hidden = false;
   }
 
-  buildKeyboard();
+  buildKeyboard($('#kbd'), { action: { key: 'Enter', label: '答える' }, onKey: typeKey });
   $('#nextBtn').addEventListener('click', nextQuestion);
   $('#replayBtn').addEventListener('click', () => { if (quiz && !quiz.answered) runFlash(quiz.questions[quiz.i]); $('#replayBtn').hidden = true; });
   $('#quitBtn').addEventListener('click', backToSetup);
@@ -897,20 +919,39 @@
   libHide.addEventListener('change', () => { store.set('libHide', libHide.checked); renderLibrary(); });
 
   // ---------- convert ----------
-  const convInput = $('#convInput');
   const convLabels = $('#convLabels');
-  convInput.value = store.get('convText', convInput.value);
+  let convText = upper(String(store.get('convText', 'MADOKA')));
   convLabels.checked = store.get('convLabels', true);
+
+  function convKey(key) {
+    if (key === 'Backspace') convText = convText.slice(0, -1);
+    else if (key === 'Clear') convText = '';
+    else if (key === ' ') { if (convText && !convText.endsWith(' ')) convText += ' '; }
+    else if (convText.length < 120) convText += key;
+    store.set('convText', convText);
+    renderConvert();
+  }
+
   function renderConvert() {
+    const disp = $('#convDisplay');
+    disp.textContent = convText;
+    disp.classList.toggle('empty', !convText);
     const out = $('#convOut');
     out.innerHTML = '';
-    const text = convInput.value.trim();
+    const text = convText.trim();
     if (!text) { out.appendChild(el('span', 'hint', 'ここに魔女文字が表示されます')); return; }
     out.appendChild(runeWord(text, settings.script, { labels: convLabels.checked }));
     fitRunes(out, 52);
   }
-  convInput.addEventListener('input', () => { store.set('convText', convInput.value); renderConvert(); });
+  buildKeyboard($('#convKbd'), { digits: true, action: { key: 'Clear', label: '全消去' }, onKey: convKey });
   convLabels.addEventListener('change', () => { store.set('convLabels', convLabels.checked); renderConvert(); });
+
+  // 変換タブでは、PCのキーボードからも打てるようにする
+  document.addEventListener('keydown', (e) => {
+    if (currentView !== 'convert' || e.ctrlKey || e.metaKey || e.altKey) return;
+    const k = e.key.length === 1 ? upper(e.key) : e.key;
+    if (/^[A-ZÄÖÜß0-9 ]$/.test(k) || k === 'Backspace') { e.preventDefault(); convKey(k); }
+  });
 
   // ---------- about ----------
   function renderSources() {

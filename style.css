@@ -304,7 +304,8 @@ textarea:focus { outline: none; border-color: var(--accent); }
 }
 
 /* `font` shorthand resets numeral style; Cormorant defaults to old-style figures */
-.progress-label, .result-score, .letter-single, .choice, .lat, .dlg-letter, .rune-char small, textarea { font-variant-numeric: lining-nums; }
+.progress-label, .result-score, .letter-single, .choice, .lat, .dlg-letter, .rune-char small, textarea,
+.type-display, .key { font-variant-numeric: lining-nums; }
 
 @media (max-width: 520px) {
   .review-item { flex-direction: column; align-items: flex-start; gap: 8px; }
@@ -545,3 +546,7 @@ body.playing .gloss { max-height: 5.2em; overflow: auto; }
 #speechBox { border-top: 1px dashed var(--line); padding-top: 14px; }
 #speechBox .field-row { margin-bottom: 10px; }
 #speechBox select { min-width: 180px; max-width: 100%; }
+
+/* 変換タブのキーボード */
+#convDisplay { margin-top: 6px; }
+#convKbd { margin: 8px 0 16px; }
