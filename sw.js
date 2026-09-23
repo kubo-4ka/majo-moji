@@ -1,5 +1,5 @@
 // Offline support. Bump VERSION whenever app files change so installed apps pick up the update.
-const VERSION = 'mm-v10';
+const VERSION = 'mm-v11';
 const APP_FILES = [
   './',
   'index.html',

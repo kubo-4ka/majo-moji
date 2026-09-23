@@ -550,3 +550,4 @@ body.playing .gloss { max-height: 5.2em; overflow: auto; }
 /* 変換タブのキーボード */
 #convDisplay { margin-top: 6px; }
 #convKbd { margin: 8px 0 16px; }
+.lib-item .note-line { font-size: 12.5px; color: var(--muted); line-height: 1.7; }

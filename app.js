@@ -890,9 +890,9 @@
         if (script !== 'archaic' || e.script) sub.push(`<span class="badge">${SCRIPTS[script].label}</span>`);
         if (e.lang && e.lang !== 'name' && e.lang !== 'de-name') sub.push(`<span class="badge lang">${LANG_BADGE[e.lang]}</span>`);
         if (e.shown) sub.push(`作中表記：${escapeHtml(e.shown)}`);
-        if (e.note) sub.push(escapeHtml(e.note));
         const s = wstats[e.key];
         if (s && s.a) sub.push(`正答 ${s.c}/${s.a}`);
+        if (e.note) meta.appendChild(el('span', 'note-line', escapeHtml(e.note)));
         if (sub.length) meta.appendChild(el('span', 'sub', sub.join('<span aria-hidden="true">·</span>')));
         item.appendChild(meta);
         item.addEventListener('click', () => { if (libHide.checked) item.classList.toggle('open'); });
