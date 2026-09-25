@@ -51,6 +51,8 @@ https://kubo-4ka.github.io/majo-moji/
 | `runes.js`                                  | 魔女文字のグリフ（生成ファイル）                                                               |
 | `tools/build-runes.js`                      | SVG から `runes.js` を生成するスクリプト（`node tools/build-runes.js runes.js <SVGフォルダ>`） |
 | `tools/serve.js`                            | ローカル確認用サーバ（`node tools/serve.js` → http://localhost:26828）                         |
+| `ogp.png`                                   | リンクカード（OGP）用の画像 1200×630                                                            |
+| `tools/make-ogp.html`                       | その画像を作り直すページ（ブラウザで開いてダウンロード）                                       |
 | `tools/make-cert.js`                        | ローカル HTTPS 確認用の自己署名証明書を作るスクリプト（要 openssl）                            |
 
 ### data.js の書き方
@@ -100,6 +102,14 @@ Get-NetTCPConnection -LocalPort 26828 -State Listen | ForEach-Object { Stop-Proc
 ```
 
 `tools/certs/` は秘密鍵を含むため `.gitignore` で除外しています。
+
+### リンクカード（OGP）
+
+`index.html` の `og:` / `twitter:` のメタタグと `ogp.png` で、SNS に貼ったときのカードを出します。公開先の URL を変えたときは、`index.html` 冒頭の `canonical` / `og:url` / `og:image` / `twitter:image` の4か所を書き換えてください（画像は絶対 URL である必要があります）。
+
+画像を作り直すときは `tools/make-ogp.html` をブラウザで開き、「ogp.png をダウンロード」からルートのファイルを置き換えます。
+
+X や Discord などはカードをキャッシュするので、差し替え後すぐに反映されないことがあります。X は [Card Validator](https://cards-dev.twitter.com/validator)、Facebook は [シェアデバッガー](https://developers.facebook.com/tools/debug/) で再取得できます。
 
 ### 更新するとき
 

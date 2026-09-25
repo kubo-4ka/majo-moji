@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <title>OGP 画像を作る — 魔女文字練習帳</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,500&family=Shippori+Mincho:wght@600&family=Zen+Kaku+Gothic+New:wght@400&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: "Zen Kaku Gothic New", sans-serif; margin: 24px; background: #15111b; color: #ece6f5; }
+    h1 { font-size: 18px; font-weight: 400; }
+    canvas { width: 100%; max-width: 900px; height: auto; border: 1px solid #342b40; border-radius: 8px; }
+    a { display: inline-block; margin-top: 14px; color: #b594e6; }
+    p { font-size: 13px; color: #8e84a1; line-height: 1.8; }
+  </style>
+</head>
+<body>
+  <h1>リンクカード用の画像（1200 × 630）</h1>
+  <canvas id="cv" width="1200" height="630"></canvas>
+  <p><a id="dl" download="ogp.png">ogp.png をダウンロード</a>　→ プロジェクトのルートに置き換えてください。</p>
+  <p>文言や配色を変えたいときは、このファイルの下の方にある描画部分を書き換えてから開き直してください。</p>
+
+  <script src="../runes.js"></script>
+  <script>
+    (async () => {
+      await document.fonts.ready;
+      const W = 1200, H = 630;
+      const x = document.getElementById('cv').getContext('2d');
+
+      // 背景
+      const g = x.createLinearGradient(0, 0, W, H);
+      g.addColorStop(0, '#2a1d3d'); g.addColorStop(0.55, '#1c1428'); g.addColorStop(1, '#3a2456');
+      x.fillStyle = g; x.fillRect(0, 0, W, H);
+
+      // 魔法陣風の円と枠
+      x.strokeStyle = 'rgba(200,170,245,.22)'; x.lineWidth = 1.5;
+      x.beginPath(); x.arc(W / 2, H / 2, 300, 0, Math.PI * 2); x.stroke();
+      x.setLineDash([6, 8]);
+      x.beginPath(); x.arc(W / 2, H / 2, 268, 0, Math.PI * 2); x.stroke();
+      x.setLineDash([]);
+      x.strokeStyle = 'rgba(200,170,245,.35)'; x.strokeRect(36, 36, W - 72, H - 72);
+
+      // 魔女文字（Archaic 体で HEXE ＝ 魔女）
+      const word = 'HEXE';
+      const imgs = await Promise.all([...word].map(async (ch) => {
+        const svg = window.RUNES.archaic[ch].replace(/currentColor/g, '#efe6ff');
+        const im = new Image();
+        im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+        await im.decode();
+        return im;
+      }));
+      const rh = 150, gap = 26;
+      const widths = imgs.map((im) => rh * im.width / im.height);
+      let px = (W - (widths.reduce((a, b) => a + b, 0) + gap * (imgs.length - 1))) / 2;
+      imgs.forEach((im, i) => { x.drawImage(im, px, 118, widths[i], rh); px += widths[i] + gap; });
+
+      // 文字
+      x.textAlign = 'center';
+      x.fillStyle = '#ffffff';
+      x.font = '600 76px "Shippori Mincho", serif';
+      x.fillText('魔女文字練習帳', W / 2, 380);
+      x.fillStyle = '#c9a8f0';
+      x.font = 'italic 500 38px "Cormorant Garamond", serif';
+      x.fillText('Hexenrunen · Übungsheft', W / 2, 440);
+      x.fillStyle = 'rgba(236,230,245,.82)';
+      x.font = '400 27px "Zen Kaku Gothic New", sans-serif';
+      x.fillText('魔女文字を読む練習帳 — 一覧・クイズ・図鑑・変換', W / 2, 508);
+      x.fillStyle = 'rgba(236,230,245,.5)';
+      x.font = '400 21px "Zen Kaku Gothic New", sans-serif';
+      x.fillText('非公式ファンメイド作品', W / 2, 556);
+
+      document.getElementById('dl').href = document.getElementById('cv').toDataURL('image/png');
+    })();
+  </script>
+</body>
+</html>
